@@ -5,7 +5,37 @@ import random
 import time
 import math
 
+info = [
+    "Creating wildlife corridors can help reduce animal-vehicle collisions and allow animals to safely migrate between different parts of their habitat.",
+    "Removing invasive species from an ecosystem can help native plants and animals thrive by reducing competition for resources.",
+    "Installing bird boxes and bat boxes can provide safe nesting sites and help boost local populations.",
+    "Water conservation measures, such as rainwater harvesting, are vital for maintaining water bodies within reserves, supporting both aquatic life and terrestrial animals.",
+    "Planting native vegetation enhances the natural habitat, supports local wildlife, and promotes biodiversity.",
+    "Regular patrols and the use of motion-sensitive cameras can help monitor wildlife populations and deter poaching.",
+    "Engaging local communities in reserve activities and benefits can promote conservation and reduce human-wildlife conflicts.",
+    "Restoring wetlands is crucial for maintaining biodiversity, purifying water, and providing habitat for numerous species.",
+    "Providing wildlife with supplementary feeding during extreme weather can help prevent starvation and reduce mortality rates.",
+    "Conducting regular wildlife censuses helps track population trends and assess the effectiveness of conservation strategies.",
+    "Using eco-friendly materials and renewable energy sources in the construction of reserve facilities can minimize environmental impact.",
+    "Educating visitors about the importance of not feeding wild animals helps maintain natural behaviors and diet.",
+    "Implementing fire management practices can help prevent catastrophic wildfires and maintain ecological balance.",
+    "Recycling and proper waste management practices reduce pollution and its harmful impacts on wildlife.",
+    "Promoting ecotourism and responsible wildlife viewing practices can generate income for conservation while minimizing disturbance to animals."
+    "Fencing critical areas helps protect endangered species from poachers and prevent human-wildlife conflict, especially near village borders.",
+    "Reforestation projects can restore degraded areas, improve climate resilience, and reconnect fragmented habitats, supporting larger, more viable wildlife populations.",
+    "Anti-poaching technology, such as drones and AI-powered surveillance systems, can enhance the monitoring of vast and hard-to-reach areas within the reserve.",
+    "Wildlife health monitoring programs ensure early detection of diseases that can affect animal populations, with veterinary units prepared to intervene when necessary.",
+    "Educational outreach programs in schools and communities raise awareness about the importance of biodiversity and conservation practices.",
+    "Artificial reefs can be created to enhance marine biodiversity, providing additional habitats and attracting a variety of marine life to degraded areas.",
+    "Eco-sensitive waste management in and around the reserve includes composting organic waste and ensuring that all plastics and non-biodegradable materials are removed or recycled.",
+    "Sustainable tourism guidelines ensure that the influx of visitors does not disrupt wildlife or degrade the natural environment, maintaining the reserve's integrity and appeal.",
+]
+
 pygame.init()
+pygame.mixer.init()
+
+pygame.mixer.music.load('background.mp3')
+pygame.mixer.music.play(-1)
 
 # Constants for the screen size
 SCREEN_WIDTH = 1400
@@ -118,10 +148,27 @@ def play_screen():
     text_rect = text.get_rect(center=(button_x + button_width // 2, button_y + button_height // 2))
     screen.blit(text, text_rect)
 
-def custom_message(message):
+
+
+def custom_message(message, y_block = button_y + button_height // 2 ):
     # pygame.draw.rect(screen, GRAY, (button_x, button_y, button_width, button_height))
     text = font.render(message, True, BLACK)
-    text_rect = text.get_rect(center=(button_x + button_width // 2, button_y + button_height // 2))
+    text_rect = text.get_rect(center=(button_x + button_width // 2, y_block))
+    screen.blit(text, text_rect)
+    
+def info_message(message, y_block=button_y + button_height // 2):
+    max_font_size = 48  # Maximum font size to start with
+    max_width = SCREEN_WIDTH - button_width  # Maximum width for the message
+
+    font_size = max_font_size
+    font = pygame.font.Font(None, font_size)
+    text_width, text_height = font.size(message)
+    while text_width > max_width and font_size > 0:
+        font_size -= 1
+        font = pygame.font.Font(None, font_size)
+        text_width, text_height = font.size(message)
+    text = font.render(message, True, BLACK)
+    text_rect = text.get_rect(center=(button_x + button_width // 2, y_block))
     screen.blit(text, text_rect)
 
 class Camera:
@@ -193,7 +240,7 @@ lion_images = {
     "standing": load_image("animal_images/lion/standing.png", LION_SIZE),
     "sleeping": load_image("animal_images/lion/sleeping.png", LION_SIZE),
     "dead": load_image("animal_images/lion/dead.png", LION_SIZE),
-    
+    "croco": load_image("animal_images/crocodile/croco_1.png",LION_SIZE)
 }
 
 giraffe_images = {
@@ -204,8 +251,8 @@ giraffe_images = {
     ],
     "standing": load_image("animal_images/giraffe/standing.png", GIRAFFE_SIZE),
     "sitting": load_image("animal_images/giraffe/standing.png", GIRAFFE_SIZE),
-    "dead": load_image("animal_images/giraffe/dead.png", GIRAFFE_SIZE)
-    
+    "dead": load_image("animal_images/giraffe/dead.png", GIRAFFE_SIZE),
+    "croco": load_image("animal_images/crocodile/croco_1.png",LION_SIZE)
     
 }
 
@@ -218,7 +265,8 @@ poacher_images = {
     "standing": load_image("animal_images/poacher/standing.png", POACHER_SIZE),
     "sitting": load_image("animal_images/poacher/standing.png", POACHER_SIZE),
     "dead": load_image("animal_images/poacher/dead.png", POACHER_SIZE),
-    "shoot": load_image("animal_images/poacher/shoot.png", POACHER_SIZE)
+    "shoot": load_image("animal_images/poacher/shoot.png", POACHER_SIZE),
+    "croco": load_image("animal_images/crocodile/croco_1.png",LION_SIZE)
 }
 
 ranger_images = {
@@ -232,7 +280,8 @@ ranger_images = {
     "sitting": load_image("animal_images/ranger/standing.png", RANGER_SIZE),
     "searching": load_image("animal_images/ranger/searching_moving.png", RANGER_SIZE),
     "dead": load_image("animal_images/ranger/dead.png", RANGER_SIZE),
-    "shoot": load_image("animal_images/ranger/shoot.png", RANGER_SIZE)
+    "shoot": load_image("animal_images/ranger/shoot.png", RANGER_SIZE),
+    "croco": load_image("animal_images/crocodile/croco_1.png",LION_SIZE)
 }
 
 vehicle_images = {
@@ -416,8 +465,9 @@ class Animal:
                                     self.prey = None
                                     Mark = []
                                     self.chase = False
-                # elif(self.animal == "giraffe"):
-                #     if(self.alive):
+                elif(self.animal == "giraffe"):
+                    if(self.predator != None):
+                        print("predator set")
                           
                       
             else:
@@ -716,7 +766,10 @@ class Animal:
                 print("died")
         else:
             if(self.wait != 0):
-                self.image = pygame.transform.rotate(self.images["dead"], 90)
+                if(self.rect.x < 320):
+                    self.image = self.images["croco"]
+                else:
+                    self.image = pygame.transform.rotate(self.images["dead"], 90)
                 self.wait -= 1
             else:
                 self.image = None
@@ -743,6 +796,15 @@ class Animal:
                     Poacher.pop(i)
                     break
                 
+        for i in range(len(Player)):
+            if (not Player[i].is_alive()):
+                if(Player[i].wait == 0):
+                    Player.pop(i)
+                    Player_dead[0] = True
+                    play_char[0] = True
+                    break
+                # else:
+                #     self.image = 
         
             
     def set_predator(self,pred):
@@ -797,8 +859,8 @@ class Animal:
        
     
             
-num_lions = 0
-num_giraffe = 1
+num_lions = 1
+num_giraffe = 2
 
 for i in range(num_lions):
     x,y = Animal_start("lion")
@@ -829,8 +891,12 @@ Vehicle.append(vehicle)
 
 
 start_time = time.time()
+info_time = time.time()
 running = True
+
+inf = ""
 while running:
+    
     if(not playscreen[0] and Play_mode[0]):
         
         keys = pygame.key.get_pressed()
@@ -895,18 +961,21 @@ while running:
                     if(len(Ranger) != 0):
                         Ranger[i].draw(screen,camera)
             for i in range(len(Player)):
-                if(Player[i].alive):
-                    Player[i].update("stop")
-                    Player[i].draw(screen,camera)
-                else:
-                    Player_dead[0] = True
+                Player[i].update("stop")
+                Player[i].draw(screen,camera)
+                
+                    
                     
                         
             vehicle.update("stop")
             vehicle.draw(screen,camera)
             process_object_layer(Game_over[0],screen,tmx_data,camera)
             
-            
+            if(time.time() - info_time > 10.0):
+                inf = random.choice(info)
+                info_time = time.time()
+                
+            info_message(inf,100)
             if(time.time() - start_time > 120.0 and len(Poacher) == 0):
                 start_time = time.time()
                 poach = Animal(poacher_images,MAP_WIDTH,MAP_HEIGHT,6,"poacher",290)
@@ -957,6 +1026,7 @@ while running:
                             Predators.append(lion)
                             Player.append(lion)
                         elif(characters[idx] == "giraffe"):
+                            play_char[0] = True
                             x,y = Animal_start("giraffe")
                             giraffe = Animal(giraffe_images, x, y,10,"giraffe",0, True)
                             Animals.append(giraffe)
