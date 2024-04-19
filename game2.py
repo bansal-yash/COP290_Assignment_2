@@ -1,3 +1,11 @@
+# The github link for the project is :-
+
+#     https://github.com/bansal-yash/COP290_Assignment_2
+
+# The one drive link for the assets is :-
+
+#     https://csciitd-my.sharepoint.com/:f:/g/personal/cs5221133_iitd_ac_in/EigAA05xbVpHj_Uw9-eYgF4BlvJWggp2bBmnxjmVGug24Q?e=pUF1Z0
+
 import pygame
 import pytmx
 import sys
@@ -9,6 +17,7 @@ info = [
     "Creating wildlife corridors can help reduce animal-vehicle collisions and allow animals to safely migrate between different parts of their habitat.",
     "Removing invasive species from an ecosystem can help native plants and animals thrive by reducing competition for resources.",
     "Installing bird boxes and bat boxes can provide safe nesting sites and help boost local populations.",
+    "Water conservation measures, such as rainwater harvesting, are vital for maintaining water bodies within reserves, supporting both aquatic life and terrestrial animals.",
     "Planting native vegetation enhances the natural habitat, supports local wildlife, and promotes biodiversity.",
     "Regular patrols and the use of motion-sensitive cameras can help monitor wildlife populations and deter poaching.",
     "Engaging local communities in reserve activities and benefits can promote conservation and reduce human-wildlife conflicts.",
@@ -21,9 +30,13 @@ info = [
     "Recycling and proper waste management practices reduce pollution and its harmful impacts on wildlife.",
     "Promoting ecotourism and responsible wildlife viewing practices can generate income for conservation while minimizing disturbance to animals."
     "Fencing critical areas helps protect endangered species from poachers and prevent human-wildlife conflict, especially near village borders.",
+    "Reforestation projects can restore degraded areas, improve climate resilience, and reconnect fragmented habitats, supporting larger, more viable wildlife populations.",
     "Anti-poaching technology, such as drones and AI-powered surveillance systems, can enhance the monitoring of vast and hard-to-reach areas within the reserve.",
+    "Wildlife health monitoring programs ensure early detection of diseases that can affect animal populations, with veterinary units prepared to intervene when necessary.",
     "Educational outreach programs in schools and communities raise awareness about the importance of biodiversity and conservation practices.",
     "Artificial reefs can be created to enhance marine biodiversity, providing additional habitats and attracting a variety of marine life to degraded areas.",
+    "Eco-sensitive waste management in and around the reserve includes composting organic waste and ensuring that all plastics and non-biodegradable materials are removed or recycled.",
+    "Sustainable tourism guidelines ensure that the influx of visitors does not disrupt wildlife or degrade the natural environment, maintaining the reserve's integrity and appeal.",
 ]
 
 pygame.init()
@@ -340,7 +353,9 @@ def Animal_start(animal_type):
     if(animal_type == "lion"):
         return (random.randint(x-50,x+50),random.randint(y-20,y+20))
     elif(animal_type == "giraffe"):
-        return (random.randint(x-200,x+200),random.randint(y-100,y+100))
+        x,y = random.randint(x-200,x+200),random.randint(y-100,y+100)
+        a,b = x,4800-y
+        return random.choice([(a,b),(x,y)])
     elif (animal_type == "poacher"):
         return (random.randint(x-50,x+50),random.randint(y-20,y+20))
     elif (animal_type == "vehicle"):
@@ -549,17 +564,27 @@ class Animal:
                         self.loc_x,self.loc_y = Poacher[0].get_location()
                         self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
                         move_dir = self.dir
-                        if(self.current_action == "fight"):
-                            if(self.wait >= 0):
-                                self.wait -= 1
-                                move_dir = "shoot"
-                            if(self.wait == 0):
-                                if(Poacher[0].alive == True):
-                                    Ranger[0].killed()
-                                    move_dir = "stop"
-                                else:
-                                    move_dir = "stop"
-                                    self.alert = False
+                        if(Poacher[0].player):
+                            if self.loc_y < 100:
+                                print("here")
+                                self.alert = False
+                                move_dir = self.move_to_this_tile(Animal_start("ranger"))
+                            elif (abs(self.rect.x - self.loc_x) < 40 and abs(self.rect.y - self.loc_y) < 40):
+                                print("here")
+                                Player[0].alive = False
+                                self.alert = False
+                        else:
+                            if(self.current_action == "fight"):
+                                if(self.wait >= 0):
+                                    self.wait -= 1
+                                    move_dir = "shoot"
+                                if(self.wait == 0):
+                                    if(Poacher[0].alive == True):
+                                        Ranger[0].killed()
+                                        move_dir = "stop"
+                                    else:
+                                        move_dir = "stop"
+                                        self.alert = False
                     else:
                         self.loc_x, self.loc_y = Animal_start(self.animal)
                         self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
@@ -898,6 +923,7 @@ vehicle = Animal(vehicle_images,x,y,30,"vehicle",0, False)
 Vehicle.append(vehicle)
 
 
+animal_time = time.time()
 start_time = time.time()
 info_time = time.time()
 running = True
@@ -982,9 +1008,28 @@ while running:
             vehicle.draw(screen,camera)
             process_object_layer(Game_over[0],screen,tmx_data,camera)
             
+            if(time.time() - animal_time > 10.0):
+                animal_time = time.time()
+                
+            
             if(time.time() - info_time > 10.0):
                 inf = random.choice(info)
                 info_time = time.time()
+                if(len(Preys) < 4):
+                    c = 4 - len(Preys)
+                    for i in range(c):
+                        x,y = Animal_start("giraffe")
+                        ani = Animal(giraffe_images, x, y,3,"giraffe",0, False)
+                        Animals.append(ani)
+                        Preys.append(ani)
+                if(len(Predators) < 2):
+                    c = 2 - len(Predators)
+                    for i in range(c):
+                        x,y = Animal_start("lion")
+                        ani = Animal(lion_images, x, y,3,"lion",0, False)
+                        Animals.append(ani)
+                        Predators.append(ani)
+                
                 
             info_message(inf,100)
             if(time.time() - start_time > 120.0 and len(Poacher) == 0):
