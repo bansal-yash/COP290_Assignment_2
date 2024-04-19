@@ -295,8 +295,8 @@ Poacher_action = ["to_kill"]
 Giraffe_action = ["to_drink","to_rest"]
 Giraffe_location_map = {
     "to_drink": (340,950),
-    # "to_rest" : (1500,900)
-    "to_rest" : (2000,2500)
+    "to_rest" : (1500,900)
+    # "to_rest" : (2000,2500)
     
 }
 # Lion_action = ["to_drink","to_kill","to_rest"]
@@ -403,6 +403,7 @@ class Animal:
         self.allow_chase = False
         self.allow_kill = False
         self.kill_prey_player = False
+        self.shot = 0
         
     def near_prey(self):
         for prey in Preys:
@@ -413,7 +414,13 @@ class Animal:
                 custom_message("Press C to start the chase")
                 # print(prey.get_location())
                 return prey
-
+            
+    def near_animal_poach(self):
+        for animal in Animals:
+            x,y = animal.get_location()
+            if(abs(self.rect.x - x) < 150 and abs(self.rect.y - y) < 150):
+                Mark.append(animal)
+                custom_message("Press T to shoot")
                 
     def kill_prey(self):
         prey = self.prey
@@ -448,11 +455,6 @@ class Animal:
                     if (self.alive):
                         if(not self.chase):
                             self.near_prey()
-                            # if(prey == None):
-                            #     print("hurrah")
-                            # else:
-                            #     print(self.prey.get_location())
-
                         else:
                             global Mark
                             self.prey = Mark[-1]
@@ -467,9 +469,20 @@ class Animal:
                                     self.chase = False
                 elif(self.animal == "giraffe"):
                     if(self.predator != None):
-                        print("predator set")
-                          
-                      
+                        if(abs(self.predator.rect.x - self.rect.x) < 200 and abs(self.predator.rect.y - self.rect.y) < 200):
+                            custom_message("predator_set")
+                        
+                elif(self.animal == "poacher"):
+                    
+                    self.near_animal_poach()
+                    if(len(Mark) != 0):
+                        self.poach_targ = Mark[-1] 
+                        if(self.poach_targ.shot == 3):
+                            self.poach_targ.killed()
+                            self.poach_targ.wait = 100   
+                            self.poach_targ = None
+                            Vehicle[0].alert = True   
+                        
             else:
                 
                 if(self.animal == "poacher"):
@@ -762,14 +775,12 @@ class Animal:
             self.rect.y = max(0, min(self.map_height - LION_SIZE[1], self.rect.y))
             if(self.rect.x < 320):
                 self.killed()
-                self.wait = 100
+                self.wait = 30
                 print("died")
         else:
             if(self.wait != 0):
                 if(self.rect.x < 320):
-                    self.image = pygame.transform.flip(
-                            self.images["croco"], True, False
-                        )
+                    self.image = self.images["croco"]
                 else:
                     self.image = pygame.transform.rotate(self.images["dead"], 90)
                 self.wait -= 1
@@ -934,12 +945,15 @@ while running:
                         Player[0].chase = True
                         Player[0].allow_chase = False
                         Player[0].prey = Mark[-1]
-                        print("here")
                 elif event.key == pygame.K_k:
                     print("pressed k")
                     if(Player[0].allow_kill == True):
                         Player[0].kill_prey_player = True
                         Player[0].allow_kill = False
+                elif event.key == pygame.K_t:
+                    print("pressed t")
+                    if(Player[0].poach_targ != None):
+                        Player[0].poach_targ.shot += 1
         screen.fill(WHITE)
         if (len(Preys) != 0) and (len(Predators)!= 0 and not (Player_dead[0])):
             screen.fill((0, 100, 0)) 
@@ -1034,6 +1048,15 @@ while running:
                             Animals.append(giraffe)
                             Preys.append(giraffe)
                             Player.append(giraffe)
+                            
+                        elif(characters[idx] == "poacher"):
+                            play_char[0] = True
+                            x,y = Animal_start("poacher")
+                            poach = Animal(poacher_images, x, y,10,"poacher",0, True)
+                            Poacher = []
+                            Poacher.append(poach)
+                            Player.append(poach)
+                            
                         
         screen.fill(WHITE)
         choose_character_screen()
