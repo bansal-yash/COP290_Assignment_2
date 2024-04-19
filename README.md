@@ -4,13 +4,14 @@ Course project - 2 for COP290 Design Practices, 4th semester IIT Delhi
 
 This project is done by Shivam Sawarn(2022CS11075) and Yash bansal(2022CS51133)
 
-The github link for the project is :- 
+The github link for the project is :-
 
     https://github.com/bansal-yash/COP290_Assignment_2
 
 The one drive link for the assets is :-
 
     https://csciitd-my.sharepoint.com/:f:/g/personal/cs5221133_iitd_ac_in/EigAA05xbVpHj_Uw9-eYgF4BlvJWggp2bBmnxjmVGug24Q?e=pUF1Z0
+
 ## Ecoguard
 
 This game is based on Wildlife reserves and its protection.
@@ -110,4 +111,18 @@ The animals can hide from the hunters by running to the forest area, where they 
 
 <br> <br>
 <img src="Images/died_croco.png" width="750">
+<br> <br>
+
+## Example gameplay :- Poacher's gameplay
+
+1. When an animal in near, the user need to press T 3 times to shoot and kill the animal.
+
+<br> <br>
+<img src="Images/poacher_shoot.png" width="750">
+<br> <br>
+
+2. After shooting, the rangers car will come chasing the poacher to kill him. The poacher need to run from them.
+
+<br> <br>
+<img src="Images/ranger_car.png" width="750">
 <br> <br>

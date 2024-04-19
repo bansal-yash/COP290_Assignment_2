@@ -9,7 +9,6 @@ info = [
     "Creating wildlife corridors can help reduce animal-vehicle collisions and allow animals to safely migrate between different parts of their habitat.",
     "Removing invasive species from an ecosystem can help native plants and animals thrive by reducing competition for resources.",
     "Installing bird boxes and bat boxes can provide safe nesting sites and help boost local populations.",
-    "Water conservation measures, such as rainwater harvesting, are vital for maintaining water bodies within reserves, supporting both aquatic life and terrestrial animals.",
     "Planting native vegetation enhances the natural habitat, supports local wildlife, and promotes biodiversity.",
     "Regular patrols and the use of motion-sensitive cameras can help monitor wildlife populations and deter poaching.",
     "Engaging local communities in reserve activities and benefits can promote conservation and reduce human-wildlife conflicts.",
@@ -22,13 +21,9 @@ info = [
     "Recycling and proper waste management practices reduce pollution and its harmful impacts on wildlife.",
     "Promoting ecotourism and responsible wildlife viewing practices can generate income for conservation while minimizing disturbance to animals."
     "Fencing critical areas helps protect endangered species from poachers and prevent human-wildlife conflict, especially near village borders.",
-    "Reforestation projects can restore degraded areas, improve climate resilience, and reconnect fragmented habitats, supporting larger, more viable wildlife populations.",
     "Anti-poaching technology, such as drones and AI-powered surveillance systems, can enhance the monitoring of vast and hard-to-reach areas within the reserve.",
-    "Wildlife health monitoring programs ensure early detection of diseases that can affect animal populations, with veterinary units prepared to intervene when necessary.",
     "Educational outreach programs in schools and communities raise awareness about the importance of biodiversity and conservation practices.",
     "Artificial reefs can be created to enhance marine biodiversity, providing additional habitats and attracting a variety of marine life to degraded areas.",
-    "Eco-sensitive waste management in and around the reserve includes composting organic waste and ensuring that all plastics and non-biodegradable materials are removed or recycled.",
-    "Sustainable tourism guidelines ensure that the influx of visitors does not disrupt wildlife or degrade the natural environment, maintaining the reserve's integrity and appeal.",
 ]
 
 pygame.init()
