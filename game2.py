@@ -762,12 +762,14 @@ class Animal:
             self.rect.y = max(0, min(self.map_height - LION_SIZE[1], self.rect.y))
             if(self.rect.x < 320):
                 self.killed()
-                self.wait = 30
+                self.wait = 100
                 print("died")
         else:
             if(self.wait != 0):
                 if(self.rect.x < 320):
-                    self.image = self.images["croco"]
+                    self.image = pygame.transform.flip(
+                            self.images["croco"], True, False
+                        )
                 else:
                     self.image = pygame.transform.rotate(self.images["dead"], 90)
                 self.wait -= 1

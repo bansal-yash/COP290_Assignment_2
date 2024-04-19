@@ -56,6 +56,10 @@ The motive of the game is to save the character, as well as keep atleast one pre
 
 On regular intervals, Informations regarding wildlife reserve, good bio-diversity practises and other useful information keeps flashing on the screen for the benefit of user and social good.
 
+<br> <br>
+<img src="Images/information.png" width="750">
+<br> <br>
+
 1. The lion's motive is to be safe from the poacher and hunt preys for its food. To kill the prey, the user need to press C key to start the chase, and K key to kill when it is near its prey.
 
 2. The giraffe need to be safe from the predators and the poacher. To run, pressing the space key can increase its speed, so that it can run from the hunters.
@@ -84,4 +88,19 @@ The animals can hide from the hunters by running to the forest area, where they 
 
 <br> <br>
 <img src="Images/killed.png" width="750">
+<br> <br>
+
+4. The following are images of the lion hiding behind the stones and the trees
+
+<br> <br>
+<img src="Images/hiding_stones.png" width="750">
+<br> <br>
+<br> <br>
+<img src="Images/hiding_trees.png" width="750">
+<br> <br>
+
+5. If the lion goes to the river, the crocodile eats it and it dies.
+
+<br> <br>
+<img src="Images/died_croco.png" width="750">
 <br> <br>
