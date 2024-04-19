@@ -25,13 +25,17 @@ GRAY = (200, 200, 200)
 
 Game_over = [False]
 spacebar = [False]
+playscreen = [True]
+Play_mode = [False]
+selected_character = None
+play_char = [False]
 
 button_width = 200
 button_height = 50
 button_spacing = 20
 button_x = (SCREEN_WIDTH - button_width) // 2
 button_y = SCREEN_HEIGHT - 100  # Placing the button 100 pixels from the bottom of the screen
-total_button_width = button_width * 4 + button_spacing * 3
+total_button_width = button_width * 5 + button_spacing * 4
 button_start_x = (SCREEN_WIDTH - total_button_width) // 2  # Center buttons horizontally
 button_start_y = SCREEN_HEIGHT - 200
 # pygame.display.set_caption("Flashing Game Over")
@@ -93,6 +97,30 @@ def game_over():
 def choose_character_screen():
     text = font.render("Choose Your Character", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+    screen.blit(text, text_rect)
+
+def draw_character_buttons():
+    characters = ["lion", "giraffe", "poacher", "ranger","game-ai"]
+    for idx, character in enumerate(characters):
+        button_rect = pygame.Rect(button_start_x + idx * (button_width + button_spacing), button_start_y, button_width, button_height)
+        if selected_character == character:
+            pygame.draw.rect(screen, BLACK, button_rect)
+        else:
+            pygame.draw.rect(screen, GRAY, button_rect)
+        text = font.render(character.capitalize(), True, WHITE)
+        text_rect = text.get_rect(center=button_rect.center)
+        screen.blit(text, text_rect)
+
+def play_screen():
+    pygame.draw.rect(screen, GRAY, (button_x, button_y, button_width, button_height))
+    text = font.render("Play", True, BLACK)
+    text_rect = text.get_rect(center=(button_x + button_width // 2, button_y + button_height // 2))
+    screen.blit(text, text_rect)
+
+def custom_message(message):
+    # pygame.draw.rect(screen, GRAY, (button_x, button_y, button_width, button_height))
+    text = font.render(message, True, BLACK)
+    text_rect = text.get_rect(center=(button_x + button_width // 2, button_y + button_height // 2))
     screen.blit(text, text_rect)
 
 class Camera:
@@ -163,6 +191,8 @@ lion_images = {
     ],
     "standing": load_image("animal_images/lion/standing.png", LION_SIZE),
     "sleeping": load_image("animal_images/lion/sleeping.png", LION_SIZE),
+    "dead": load_image("animal_images/lion/dead.png", LION_SIZE),
+    
 }
 
 giraffe_images = {
@@ -215,8 +245,8 @@ Poacher_action = ["to_kill"]
 Giraffe_action = ["to_drink","to_rest"]
 Giraffe_location_map = {
     "to_drink": (340,950),
-    "to_rest" : (1500,900)
-    # "to_rest" : (2000,2500)
+    # "to_rest" : (1500,900)
+    "to_rest" : (2000,2500)
     
 }
 # Lion_action = ["to_drink","to_kill","to_rest"]
@@ -287,41 +317,59 @@ Predators = []
 Poacher = []
 Ranger = []
 Vehicle = []
+Player = []
     
 
 class Animal:
     
-    def __init__(self, images, map_width, map_height,speed,animal_type,time):
+    def __init__(self, images, start_x, start_y,speed,animal_type,time,play_char):
         self.animal = animal_type
         self.images = images
         self.image = images["sitting"]
         self.rect = self.image.get_rect()
-        self.rect.x,self.rect.y = Animal_start(self.animal)
+        self.rect.x,self.rect.y = start_x,start_y
         self.frame_counter = 0
         self.frame_delay = 5
         self.moving_index = 0
         self.speed = speed
-        self.map_width = map_width
-        self.map_height = map_height
+        self.map_width = MAP_WIDTH
+        self.map_height = MAP_HEIGHT
         self.dir = "stop"
         self.current_action = "none"
         self.loc_x = 0 #self.loc_x and self.loc_y are the target location
         self.loc_y = 0
         self.alive = True
         self.predator = None
+        self.prey = None
         self.poach_targ = None
         self.pred_near = True
         self.wait = time
         self.kill = 0
         self.alert = False
+        self.player = play_char
+        
+        self.chase = False
+        self.allow_chase = False
+        self.allow_kill = False
+        self.kill_prey_player = False
         
     def near_prey(self):
         mark = []
         for prey in Preys:
             x,y = prey.get_location()
             if(abs(self.rect.x - x) < 200 and abs(self.rect.y - y) < 200):
+                self.allow_chase = True
                 mark.append(prey)
-                print("Do you want to chase")
+                custom_message("Press C to start the chase")
+                return prey
+                
+    def kill_prey(self):
+        mark = []
+        for prey in Preys:
+            x,y = prey.get_location()
+            if(abs(self.rect.x - x) < 40 and abs(self.rect.y - y) < 40):
+                mark.append(prey)
+                custom_message("Press K to kill the prey")
         
     def move_to_this_tile(self,x,y):
         if self.rect.x < x:
@@ -335,17 +383,24 @@ class Animal:
             return "down"
         return "stop"
 
-    def update(self,player,direction):
+    def update(self,direction):
         if (self.alive):
             zoom_adjusted_speed = self.speed * camera.zoom_level
             zoom_adjusted_delay = self.frame_delay / camera.zoom_level
             
             # There can be two cases either the player is playing or the game ai is playing
-            if(player):
+            if(self.player):
                 self.dir = direction
                 move_dir = direction
                 if(self.animal == "lion"):
-                    self.near_prey()    
+                    if(not self.chase):
+                        prey = self.near_prey()
+                        self.prey = prey
+                    else:
+                        self.prey.predator = self
+                        self.kill_prey()
+                    
+                        
             else:
                 
                 if(self.animal == "poacher"):
@@ -381,12 +436,53 @@ class Animal:
                             move_dir = self.dir
                     else:
                         self.loc_y = 15
-                           
+                        self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
+                        if(abs(self.rect.x - Ranger[0].rect.x) < 64 and abs(self.rect.y - Ranger[0].rect.y) < 64 and self.current_action != 'fight'):
+                            self.current_action = 'fight'
+                            Ranger[0].current_action = 'fight'
+                            self.wait = 90
+                            Ranger[0].wait = 95
+                            move_dir = "shot"
+                        elif(self.current_action == "fight"):
+                            
+                            if(self.wait > 0):
+                                self.wait -= 1
+                                move_dir = "shoot"
+                            elif(self.wait == 0):
+                                a = random.randint(0,2)
+                                print(a)
+                                if(a <= 1):
+                                    Poacher[0].killed()
+                                    Poacher[0].wait = 200
+                                    move_dir = "stop"
+                                else:
+                                    self.kill = 2
+                                    self.alert= False
+                                    self.current_action = "none"
+                                    move_dir = "stop"
+                        elif(self.current_action == "Return_poacher"):
+                            self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
+                            move_dir = self.dir
+                          
+                        else:
+                            move_dir = self.dir
+                        
                 elif(self.animal == "ranger"):
                     if(self.alert):
                         self.loc_x,self.loc_y = Poacher[0].get_location()
                         self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
                         move_dir = self.dir
+                        if(self.current_action == "fight"):
+                            if(self.wait >= 0):
+                                self.wait -= 1
+                                move_dir = "shoot"
+                            if(self.wait == 0):
+                                if(Poacher[0].alive == True):
+                                    Ranger[0].killed()
+                                    move_dir = "stop"
+                                else:
+                                    move_dir = "stop"
+                                    self.alert = False
                     else:
                         self.loc_x, self.loc_y = Animal_start(self.animal)
                         self.dir = self.move_to_this_tile(self.loc_x,self.loc_y)
@@ -449,19 +545,23 @@ class Animal:
                                 screen.fill(BLACK)
                                 Game_over[0] = True
                             else:
-                                Preys[0].set_predator(self)
-                                self.loc_x,self.loc_y = Preys[0].get_location()
+                                self.nearest_prey()
+                                
+                                self.prey.predator = self
+                                self.loc_x,self.loc_y = self.prey.get_location()
                                 if abs(self.rect.x - self.loc_x) < 40 and abs(self.rect.y - self.loc_y) < 40:
                                     a = random.randint(0,1)
                                     if(a == 1):
-                                        Preys[0].killed()
-                                        Preys.pop(0)
+                                        self.prey.killed()
+                                        self.remove_dead()
                                         self.wait = 200
                                         self.current_action = "none"
                                     else:
                                         self.current_action = "none"
                                         self.wait = 120
-                                        Preys[0].set_predator(None)
+                                        self.prey.predator = None
+                                        self.prey = None
+                                        
                         elif(self.current_action == "to_drink"):
                             self.loc_x, self.loc_y = Animal_drink(self.animal)  
                         else:
@@ -470,18 +570,21 @@ class Animal:
                             
                     elif(self.current_action == "to_kill"):
                         if(len(Preys) != 0):
-                            self.loc_x,self.loc_y = Preys[0].get_location()
+                            self.nearest_prey()
+                            self.prey.predator = self
+                            self.loc_x,self.loc_y = self.prey.get_location()
                             if abs(self.rect.x - self.loc_x) < 20 and abs(self.rect.y - self.loc_y) < 20:
                                 a = random.randint(0,1)
                                 if(a == 1):
-                                    Preys[0].killed()
-                                    Preys.pop(0)
-                                    self.current_action = "none"
+                                    self.prey.killed()
+                                    self.remove_dead()
                                     self.wait = 200
+                                    self.current_action = "none"
                                 else:
                                     self.current_action = "none"
                                     self.wait = 120
-                                    Preys[0].set_predator(None)
+                                    self.prey.predator = None
+                                    self.prey = None
                         else:
                             screen.fill(BLACK)
                             Game_over[0] = True
@@ -494,10 +597,15 @@ class Animal:
             #Now that we have got the direction of the animal, we should move it  
             if move_dir != "stop":
                 
-                if(not(player)):
+                if(not(self.player)):
                     if(abs(self.rect.x - self.loc_x) < zoom_adjusted_speed):
                             self.rect.x = self.loc_x
-                            if(abs(self.rect.y - self.loc_y) < zoom_adjusted_speed and self.animal != "poacher"):
+                            if(self.current_action == "fight"):
+                                if(move_dir == "shoot"):
+                                    move_dir = "shoot"
+                                else:  
+                                    move_dir = move_dir
+                            elif(abs(self.rect.y - self.loc_y ) < zoom_adjusted_speed and self.animal != "poacher"):
                                 self.rect.y = self.loc_y
                                 move_dir = "stop"
                             elif(abs(self.rect.y - self.loc_y) < zoom_adjusted_speed and self.current_action == "Return_poacher"):
@@ -551,7 +659,7 @@ class Animal:
                     self.rect.y += new_speed
                     if(self.animal == "vehicle"):
                         self.image = pygame.transform.rotate(
-                            self.images["vertical"][self.moving_index], 180
+                            self.images["vertical"], 180
                         )
                     else:
                         self.image = pygame.transform.rotate(
@@ -571,18 +679,21 @@ class Animal:
                         self.moving_index = (self.moving_index + 1) % len(self.images["moving"])
                         self.frame_counter = 0
             else:
-                if(self.animal == "vehicle"):
-                    self.image = self.images["horizontal"]
-                else:
-                    self.image = self.images["sitting"]
-                    self.moving_index = 0
-                    self.current_action = "none"
-                if(self.animal != "poacher"):
-                    self.wait = 120
+                if(not self.player):
+                    if(self.animal == "vehicle"):
+                        self.image = self.images["horizontal"]
+                    else:
+                        self.image = self.images["sitting"]
+                        self.moving_index = 0
+                        self.current_action = "none"
+                    if(self.animal != "poacher"):
+                        self.wait = 120
 
             self.rect.x = max(0, min(self.map_width - LION_SIZE[0], self.rect.x))
             self.rect.y = max(0, min(self.map_height - LION_SIZE[1], self.rect.y))
             if(self.rect.x < 320):
+                self.killed()
+                self.wait = 30
                 print("died")
         else:
             if(self.wait != 0):
@@ -594,16 +705,27 @@ class Animal:
     def remove_dead(self):
         for i in range(len(Animals)):
             if (not Animals[i].is_alive()):
-                Animals.pop(i)
-                break
+                if(Animals[i].wait == 0):
+                    Animals.pop(i)
+                    break
         for i in range(len(Preys)):
             if (not Preys[i].is_alive()):
-                Preys.pop(i)
-                break
+                if(Preys[i].wait == 0):
+                    Preys.pop(i)
+                    break
         for i in range(len(Predators)):
             if (not Predators[i].is_alive()):
-                Predators.pop(i)
-                break
+                if(Predators[i].wait == 0):
+                    Predators.pop(i)
+                    break
+        for i in range(len(Poacher)):
+            if (not Poacher[i].is_alive()):
+                if(Poacher[i].wait == 0):
+                    Poacher.pop(i)
+                    break
+                
+        
+            
     def set_predator(self,pred):
         self.predator = pred
     
@@ -645,95 +767,181 @@ class Animal:
     def is_alive(self):
         return self.alive
     
+    def nearest_prey(self):
+        dist = 1000000000
+        for i in range(len(Preys)):
+            x,y = Preys[i].get_location()
+            calc = math.sqrt((self.rect.x - x)**2 + (self.rect.y - y)**2)
+            if(calc < dist):
+                self.prey = Preys[i]
+                dist = calc
+       
     
-        
-    
-num_lions = 1
-num_giraffe = 3
+            
+num_lions = 0
+num_giraffe = 1
 
 for i in range(num_lions):
-    ani = Animal(lion_images, MAP_WIDTH, MAP_HEIGHT,3,"lion",0)
+    x,y = Animal_start("lion")
+    ani = Animal(lion_images, x, y,10,"lion",0, False)
     Animals.append(ani)
     Predators.append(ani)
     
 for i in range(num_giraffe):
-    ani = Animal(giraffe_images, MAP_WIDTH, MAP_HEIGHT,3,"giraffe",0)
+    x,y = Animal_start("giraffe")
+    ani = Animal(giraffe_images, x, y,3,"giraffe",0, False)
     Animals.append(ani)
     Preys.append(ani)
     
-poach = Animal(poacher_images,MAP_WIDTH,MAP_HEIGHT,6,"poacher",290)
+x,y = Animal_start("poacher")
+poach = Animal(poacher_images,x,y,6,"poacher",290, False)
 Poacher.append(poach)
-ranger = Animal(ranger_images,MAP_WIDTH,MAP_HEIGHT,8,"ranger",0)
+
+x,y = Animal_start("ranger")
+
+ranger = Animal(ranger_images,x,y,8,"ranger",0, False)
 Ranger.append(ranger)
 camera = Camera(tmx_data.width * tmx_data.tilewidth, tmx_data.height * tmx_data.tileheight)
-vehicle = Animal(vehicle_images,MAP_WIDTH,MAP_HEIGHT,20,"vehicle",0)
+
+x,y = Animal_start("vehicle")
+
+vehicle = Animal(vehicle_images,x,y,30,"vehicle",0, False)
 Vehicle.append(vehicle)
 
 
 start_time = time.time()
 running = True
 while running:
-    player = False
-    keys = pygame.key.get_pressed()
-    if(player):
-        if keys[pygame.K_w] :
-            Animals[1].update(player,"up")
-        if keys[pygame.K_s]:
-            Animals[1].update(player,"down")
-        if keys[pygame.K_a]:
-            Animals[1].update(player,"left")
-        if keys[pygame.K_d]:
-            Animals[1].update(player,"right")
-        if keys[pygame.K_SPACE]:
-            spacebar[0] = True
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.MOUSEWHEEL:
-            camera.zoom(event.y * 0.1)
-        elif event.type == pygame.MOUSEMOTION:
-            if event.buttons[0]:
-                camera.scroll(-event.rel[0], -event.rel[1])
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_MINUS and pygame.key.get_mods() & pygame.KMOD_META and not pygame.key.get_mods() & pygame.KMOD_ALT:
-                camera.zoom(-0.1)
-            elif event.key == pygame.K_EQUALS and pygame.key.get_mods() & pygame.KMOD_META and pygame.key.get_mods() & pygame.KMOD_SHIFT and not pygame.key.get_mods() & pygame.KMOD_ALT:
-                camera.zoom(0.1)
-    screen.fill(WHITE)
-    if (len(Preys) != 0) and (len(Predators)!= 0):
-        screen.fill((0, 100, 0)) 
-        render_map(screen, tmx_data, camera)
+    if(not playscreen[0] and Play_mode[0]):
         
-        # Update and render animals
-        for i in range(len(Animals)):
-            Animals[i].update(player, "stop")
-            Animals[i].draw(screen, camera)
-        for i in range(len(Poacher)):
-            Poacher[i].update(player, "stop")
-            if(len(Poacher) != 0):
-                Poacher[i].draw(screen,camera)
-        for i in range(len(Ranger)):
-            Ranger[i].update(player, "stop")
-            if(len(Ranger) != 0):
-                Ranger[i].draw(screen,camera)
-        vehicle.update(player,"stop")
-        vehicle.draw(screen,camera)
-        process_object_layer(Game_over[0],screen,tmx_data,camera)
-        
-        
-        if(time.time() - start_time > 120.0 and len(Poacher) == 0):
-            start_time = time.time()
-            poach = Animal(poacher_images,MAP_WIDTH,MAP_HEIGHT,6,"poacher",290)
-            Poacher.append(poach)
-        # Render UI or game over screen if needed
-        if Game_over[0]:
+        keys = pygame.key.get_pressed()
+        if(play_char[0]):
+            if keys[pygame.K_w] :
+                Player[0].update("up")
+            if keys[pygame.K_s]:
+                Player[0].update("down")
+            if keys[pygame.K_a]:
+                Player[0].update("left")
+            if keys[pygame.K_d]:
+                Player[0].update("right")
+            if keys[pygame.K_SPACE]:
+                spacebar[0] = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEWHEEL:
+                camera.zoom(event.y * 0.1)
+            elif event.type == pygame.MOUSEMOTION:
+                if event.buttons[0]:
+                    camera.scroll(-event.rel[0], -event.rel[1])
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_MINUS and pygame.key.get_mods() & pygame.KMOD_META and not pygame.key.get_mods() & pygame.KMOD_ALT:
+                    camera.zoom(-0.1)
+                elif event.key == pygame.K_EQUALS and pygame.key.get_mods() & pygame.KMOD_META and pygame.key.get_mods() & pygame.KMOD_SHIFT and not pygame.key.get_mods() & pygame.KMOD_ALT:
+                    camera.zoom(0.1)
+                    
+                elif event.key == pygame.K_c:
+                    print("pressed c")
+                    if(Player[0].allow_chase == True):
+                        Player[0].chase = True
+                        Player[0].allow_chase = False
+                        print("here")
+                elif event.key == pygame.K_k:
+                    print("pressed k")
+                    if(Player[0].allow_kill == True):
+                        Player[0].kill_prey_player = True
+        screen.fill(WHITE)
+        if (len(Preys) != 0) and (len(Predators)!= 0):
+            screen.fill((0, 100, 0)) 
+            render_map(screen, tmx_data, camera)
+            
+            # Update and render animals
+            Animals[0].remove_dead()
+            
+            for i in range(len(Animals)):
+                if(not Animals[i].player):
+                    Animals[i].update( "stop")
+                    Animals[i].draw(screen, camera)
+            for i in range(len(Poacher)):
+                if(not Poacher[i].player):
+                    Poacher[i].update("stop")
+                    if(len(Poacher) != 0):
+                        Poacher[i].draw(screen,camera)
+            for i in range(len(Ranger)):
+                if(not Ranger[i].player):
+                    Ranger[i].update("stop")
+                    if(len(Ranger) != 0):
+                        Ranger[i].draw(screen,camera)
+            for i in range(len(Player)):
+                Player[i].update("stop")
+                Player[i].draw(screen,camera)
+                        
+            vehicle.update("stop")
+            vehicle.draw(screen,camera)
+            process_object_layer(Game_over[0],screen,tmx_data,camera)
+            
+            
+            if(time.time() - start_time > 120.0 and len(Poacher) == 0):
+                print("here")
+                start_time = time.time()
+                poach = Animal(poacher_images,MAP_WIDTH,MAP_HEIGHT,6,"poacher",290)
+                Poacher.append(poach)
+                
+            # Render UI or game over screen if needed
+            if Game_over[0]:
+                screen.fill(GRAY)
+                game_over()
+        else:
+            # Game over condition
             screen.fill(GRAY)
             game_over()
+            
+    elif(playscreen[0] and not(Play_mode[0])):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if the mouse click is within the button
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                if button_x <= mouse_x <= button_x + button_width and button_y <= mouse_y <= button_y + button_height:
+                    print("yay")
+                    playscreen[0] = False
+                
+        screen.fill(WHITE)
+        play_screen()
+        
     else:
-        # Game over condition
-        screen.fill(GRAY)
-        game_over()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if the mouse click is within the button
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                characters = ["lion", "giraffe", "poacher", "ranger","game-ai"]
+                for idx, _ in enumerate(characters):
+                    button_rect = pygame.Rect(button_start_x + idx * (button_width + button_spacing), button_start_y, button_width, button_height)
+                    if button_rect.collidepoint(mouse_x, mouse_y):
+                        
+                        print("Selected character:", characters[idx])
+                        Play_mode[0] = True
+                        if(characters[idx] == "lion"):
+                            play_char[0] = True
+                            x,y = Animal_start("lion")
+                            lion = Animal(lion_images, x, y,10,"lion",0, True)
+                            Animals.append(lion)
+                            Predators.append(lion)
+                            Player.append(lion)
+                        elif(characters[idx] == "giraffe"):
+                            x,y = Animal_start("giraffe")
+                            giraffe = Animal(giraffe_images, x, y,10,"giraffe",0, True)
+                            Animals.append(giraffe)
+                            Preys.append(giraffe)
+                            Player.append(giraffe)
+                        
+        screen.fill(WHITE)
+        choose_character_screen()
+        draw_character_buttons()
 
     pygame.display.flip()
     clock.tick(60)  # Maintain 60 FPS
