@@ -418,7 +418,7 @@ class Animal:
     def near_prey(self):
         for prey in Preys:
             x,y = prey.get_location()
-            if(abs(self.rect.x - x) < 200 and abs(self.rect.y - y) < 200):
+            if(abs(self.rect.x - x) < 200 and abs(self.rect.y - y) < 200 and prey.alive):
                 self.allow_chase = True
                 Mark.append(prey)
                 custom_message("Press C to start the chase")
@@ -428,7 +428,7 @@ class Animal:
     def near_animal_poach(self):
         for animal in Animals:
             x,y = animal.get_location()
-            if(abs(self.rect.x - x) < 150 and abs(self.rect.y - y) < 150):
+            if(abs(self.rect.x - x) < 150 and abs(self.rect.y - y) < 150 and animal.alive):
                 Mark.append(animal)
                 custom_message("Press T to shoot")
                 
@@ -491,7 +491,11 @@ class Animal:
                             self.poach_targ.killed()
                             self.poach_targ.wait = 100   
                             self.poach_targ = None
+                            Mark.pop(len(Mark) - 1)
                             Vehicle[0].alert = True   
+                        if(self.rect.y < 100):
+                            Vehicle[0].alert = False
+                            Ranger[0].alert = False
                         
             else:
                 
@@ -1012,7 +1016,7 @@ while running:
                 animal_time = time.time()
                 
             
-            if(time.time() - info_time > 10.0):
+            if(time.time() - info_time > 20.0):
                 inf = random.choice(info)
                 info_time = time.time()
                 if(len(Preys) < 4):
