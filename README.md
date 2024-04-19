@@ -4,6 +4,13 @@ Course project - 2 for COP290 Design Practices, 4th semester IIT Delhi
 
 This project is done by Shivam Sawarn(2022CS11075) and Yash bansal(2022CS51133)
 
+The github link for the project is :- 
+
+    https://github.com/bansal-yash/COP290_Assignment_2
+
+The one drive link for the assets is :-
+
+    https://csciitd-my.sharepoint.com/:f:/g/personal/cs5221133_iitd_ac_in/EigAA05xbVpHj_Uw9-eYgF4BlvJWggp2bBmnxjmVGug24Q?e=pUF1Z0
 ## Ecoguard
 
 This game is based on Wildlife reserves and its protection.
