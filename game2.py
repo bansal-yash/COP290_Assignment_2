@@ -29,6 +29,7 @@ playscreen = [True]
 Play_mode = [False]
 selected_character = None
 play_char = [False]
+Player_dead = [False]
 
 button_width = 200
 button_height = 50
@@ -318,6 +319,7 @@ Poacher = []
 Ranger = []
 Vehicle = []
 Player = []
+Mark = []
     
 
 class Animal:
@@ -354,22 +356,23 @@ class Animal:
         self.kill_prey_player = False
         
     def near_prey(self):
-        mark = []
         for prey in Preys:
             x,y = prey.get_location()
             if(abs(self.rect.x - x) < 200 and abs(self.rect.y - y) < 200):
                 self.allow_chase = True
-                mark.append(prey)
+                Mark.append(prey)
                 custom_message("Press C to start the chase")
+                # print(prey.get_location())
                 return prey
+
                 
     def kill_prey(self):
-        mark = []
-        for prey in Preys:
-            x,y = prey.get_location()
-            if(abs(self.rect.x - x) < 40 and abs(self.rect.y - y) < 40):
-                mark.append(prey)
-                custom_message("Press K to kill the prey")
+        prey = self.prey
+        x,y = prey.get_location()
+        if(abs(self.rect.x - x) < 60 and abs(self.rect.y - y) < 60):
+            self.allow_kill = True
+            custom_message("Press K to kill the prey")
+            return
         
     def move_to_this_tile(self,x,y):
         if self.rect.x < x:
@@ -393,14 +396,30 @@ class Animal:
                 self.dir = direction
                 move_dir = direction
                 if(self.animal == "lion"):
-                    if(not self.chase):
-                        prey = self.near_prey()
-                        self.prey = prey
-                    else:
-                        self.prey.predator = self
-                        self.kill_prey()
-                    
-                        
+                    if (self.alive):
+                        if(not self.chase):
+                            self.near_prey()
+                            # if(prey == None):
+                            #     print("hurrah")
+                            # else:
+                            #     print(self.prey.get_location())
+
+                        else:
+                            global Mark
+                            self.prey = Mark[-1]
+                            self.prey.predator = self
+                            self.kill_prey()
+                            if(self.kill_prey_player):
+                                self.prey.killed()
+                                if(self.prey.alive == False):
+                                    self.prey.wait = 0
+                                    self.prey = None
+                                    Mark = []
+                                    self.chase = False
+                # elif(self.animal == "giraffe"):
+                #     if(self.alive):
+                          
+                      
             else:
                 
                 if(self.animal == "poacher"):
@@ -846,13 +865,15 @@ while running:
                     if(Player[0].allow_chase == True):
                         Player[0].chase = True
                         Player[0].allow_chase = False
+                        Player[0].prey = Mark[-1]
                         print("here")
                 elif event.key == pygame.K_k:
                     print("pressed k")
                     if(Player[0].allow_kill == True):
                         Player[0].kill_prey_player = True
+                        Player[0].allow_kill = False
         screen.fill(WHITE)
-        if (len(Preys) != 0) and (len(Predators)!= 0):
+        if (len(Preys) != 0) and (len(Predators)!= 0 and not (Player_dead[0])):
             screen.fill((0, 100, 0)) 
             render_map(screen, tmx_data, camera)
             
@@ -874,8 +895,12 @@ while running:
                     if(len(Ranger) != 0):
                         Ranger[i].draw(screen,camera)
             for i in range(len(Player)):
-                Player[i].update("stop")
-                Player[i].draw(screen,camera)
+                if(Player[i].alive):
+                    Player[i].update("stop")
+                    Player[i].draw(screen,camera)
+                else:
+                    Player_dead[0] = True
+                    
                         
             vehicle.update("stop")
             vehicle.draw(screen,camera)
@@ -883,7 +908,6 @@ while running:
             
             
             if(time.time() - start_time > 120.0 and len(Poacher) == 0):
-                print("here")
                 start_time = time.time()
                 poach = Animal(poacher_images,MAP_WIDTH,MAP_HEIGHT,6,"poacher",290)
                 Poacher.append(poach)
